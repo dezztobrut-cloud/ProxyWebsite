@@ -6,14 +6,36 @@ const PORT = 3000;
 // 1. Setting User-Agent iOS (iPhone 14 Pro, Safari)
 const IOS_USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1';
 
-// 2. Script Suntikan untuk memalsukan Hardware (Baterai, CPU, RAM)
+// 2. Script Suntikan Super Stealth (Bungkam JS & Baterai Reaktor Nuklir 1000%)
 const SPOOF_SCRIPT = `
 <script>
+    const customUA = '${IOS_USER_AGENT}';
+    
+    // Nipu deteksi User-Agent & AppVersion di level JavaScript
+    Object.defineProperty(navigator, 'userAgent', {get: () => customUA});
+    Object.defineProperty(navigator, 'appVersion', {get: () => customUA});
+    Object.defineProperty(navigator, 'vendor', {get: () => 'Apple Computer, Inc.'});
+    Object.defineProperty(navigator, 'platform', {get: () => 'iPhone'});
+    
+    // Nipu Hardware
     Object.defineProperty(navigator, 'hardwareConcurrency', {get: () => 6});
     Object.defineProperty(navigator, 'deviceMemory', {get: () => 8});
-    Object.defineProperty(navigator, 'platform', {get: () => 'iPhone'});
-    const mockBattery = { level: 0.85, charging: false, chargingTime: Infinity, dischargingTime: 3600, addEventListener: () => {} };
-    navigator.getBattery = () => Promise.resolve(mockBattery);
+    
+    // Nipu Baterai jadi 1000% (level 10.0) dan status lagi ngecas (charging: true)
+    const mockBattery = { 
+        level: 10.0, 
+        charging: true, 
+        chargingTime: 0, 
+        dischargingTime: Infinity, 
+        addEventListener: () => {} 
+    };
+    
+    // Timpa fungsi getBattery bawaan browser
+    if(navigator.getBattery) {
+        navigator.getBattery = () => Promise.resolve(mockBattery);
+    } else {
+        navigator.getBattery = () => Promise.resolve(mockBattery);
+    }
 </script>
 `;
 
@@ -40,7 +62,8 @@ app.get('/proxy', async (req, res) => {
                 'User-Agent': IOS_USER_AGENT,
                 'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7'
             },
-            responseType: 'arraybuffer'
+            responseType: 'arraybuffer',
+            validateStatus: () => true // Biar proxy gak crash kalau web tujuan error
         });
 
         const contentType = response.headers['content-type'] || '';
@@ -60,7 +83,6 @@ app.get('/proxy', async (req, res) => {
     }
 });
 
-// FIX PALING AMAN: Pakai kutip dua biasa, gak pakai backtick biar gak error syntax
 app.listen(PORT, () => {
     console.log("Stealth Proxy jalan di http://localhost:" + PORT);
 });
