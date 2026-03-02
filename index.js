@@ -3,16 +3,40 @@ const axios = require('axios');
 const app = express();
 const PORT = 3000;
 
-// Custom User-Agent lu di sini
-const CUSTOM_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 ProxyGua/1.0';
+// 1. Setting User-Agent iOS (iPhone 14 Pro, Safari)
+const IOS_USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1';
+
+// 2. Script Suntikan untuk memalsukan Hardware (Baterai, CPU, RAM)
+const SPOOF_SCRIPT = `
+<script>
+    // Memalsukan CPU (misal: 6 Cores)
+    Object.defineProperty(navigator, 'hardwareConcurrency', {get: () => 6});
+    
+    // Memalsukan RAM (misal: 8 GB)
+    Object.defineProperty(navigator, 'deviceMemory', {get: () => 8});
+    
+    // Memalsukan Platform OS jadi iPhone
+    Object.defineProperty(navigator, 'platform', {get: () => 'iPhone'});
+    
+    // Memalsukan Status Baterai (misal: Baterai 85%, sedang tidak di-charge)
+    const mockBattery = {
+        level: 0.85,
+        charging: false,
+        chargingTime: Infinity,
+        dischargingTime: 3600,
+        addEventListener: () => {}
+    };
+    navigator.getBattery = () => Promise.resolve(mockBattery);
+</script>
+`;
 
 app.get('/', (req, res) => {
     res.send(`
         <div style="font-family: sans-serif; text-align: center; margin-top: 50px;">
-            <h2>Web Proxy Simple</h2>
+            <h2>iOS Stealth Proxy 😎</h2>
             <form action="/proxy" method="GET">
-                <input type="text" name="url" placeholder="Masukkan link (contoh: https://google.com)" style="width: 300px; padding: 10px;" required>
-                <button type="submit" style="padding: 10px; cursor: pointer;">Maju Jalan!</button>
+                <input type="text" name="url" placeholder="Contoh: https://whatsmyua.info" style="width: 300px; padding: 10px;" required>
+                <button type="submit" style="padding: 10px; cursor: pointer;">Nyamar Sekarang!</button>
             </form>
         </div>
     `);
@@ -21,25 +45,38 @@ app.get('/', (req, res) => {
 app.get('/proxy', async (req, res) => {
     const targetUrl = req.query.url;
 
-    if (!targetUrl) {
-        return res.status(400).send('Mana URL-nya bro?');
-    }
+    if (!targetUrl) return res.status(400).send('URL-nya masukin dulu bro!');
 
     try {
         const response = await axios.get(targetUrl, {
             headers: {
-                'User-Agent': CUSTOM_USER_AGENT
+                'User-Agent': IOS_USER_AGENT,
+                'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7', // Nyamar jadi orang Indo
             },
-            responseType: 'arraybuffer'
+            responseType: 'arraybuffer' // Pakai arraybuffer biar bisa handle gambar
         });
 
-        res.set('Content-Type', response.headers['content-type']);
+        const contentType = response.headers['content-type'] || '';
+        res.set('Content-Type', contentType);
+
+        // 3. Logika Suntikan: Kalau yang diakses itu HTML (Website), kita suntik scriptnya
+        if (contentType.includes('text/html')) {
+            let htmlData = response.data.toString('utf-8');
+            
+            // Cari tag <head> dan selipin script palsu kita tepat di bawahnya
+            htmlData = htmlData.replace('<head>', '<head>' + SPOOF_SCRIPT);
+            
+            return res.send(htmlData);
+        }
+
+        // Kalau yang diakses gambar/CSS/Video, langsung kirim aja tanpa disuntik
         res.send(response.data);
+
     } catch (error) {
-        res.status(500).send('Waduh, gagal ngakses web tujuan: ' + error.message);
+        res.status(500).send('Gagal ngakses web tujuan: ' + error.message);
     }
 });
 
 app.listen(PORT, () => {
-    console.log(\`Proxy lu udah jalan di http://localhost:\${PORT}\`);
+    console.log(\`Stealth Proxy jalan di http://localhost:\${PORT}\`);
 });
