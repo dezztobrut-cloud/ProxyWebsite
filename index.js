@@ -18,7 +18,7 @@ const SPOOF_SCRIPT = `
     // Memalsukan Platform OS jadi iPhone
     Object.defineProperty(navigator, 'platform', {get: () => 'iPhone'});
     
-    // Memalsukan Status Baterai (misal: Baterai 85%, sedang tidak di-charge)
+    // Memalsukan Status Baterai
     const mockBattery = {
         level: 0.85,
         charging: false,
@@ -51,25 +51,21 @@ app.get('/proxy', async (req, res) => {
         const response = await axios.get(targetUrl, {
             headers: {
                 'User-Agent': IOS_USER_AGENT,
-                'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7', // Nyamar jadi orang Indo
+                'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7'
             },
-            responseType: 'arraybuffer' // Pakai arraybuffer biar bisa handle gambar
+            responseType: 'arraybuffer'
         });
 
         const contentType = response.headers['content-type'] || '';
         res.set('Content-Type', contentType);
 
-        // 3. Logika Suntikan: Kalau yang diakses itu HTML (Website), kita suntik scriptnya
+        // 3. Logika Suntikan JS
         if (contentType.includes('text/html')) {
             let htmlData = response.data.toString('utf-8');
-            
-            // Cari tag <head> dan selipin script palsu kita tepat di bawahnya
             htmlData = htmlData.replace('<head>', '<head>' + SPOOF_SCRIPT);
-            
             return res.send(htmlData);
         }
 
-        // Kalau yang diakses gambar/CSS/Video, langsung kirim aja tanpa disuntik
         res.send(response.data);
 
     } catch (error) {
