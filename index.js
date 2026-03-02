@@ -9,23 +9,10 @@ const IOS_USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) A
 // 2. Script Suntikan untuk memalsukan Hardware (Baterai, CPU, RAM)
 const SPOOF_SCRIPT = `
 <script>
-    // Memalsukan CPU (misal: 6 Cores)
     Object.defineProperty(navigator, 'hardwareConcurrency', {get: () => 6});
-    
-    // Memalsukan RAM (misal: 8 GB)
     Object.defineProperty(navigator, 'deviceMemory', {get: () => 8});
-    
-    // Memalsukan Platform OS jadi iPhone
     Object.defineProperty(navigator, 'platform', {get: () => 'iPhone'});
-    
-    // Memalsukan Status Baterai
-    const mockBattery = {
-        level: 0.85,
-        charging: false,
-        chargingTime: Infinity,
-        dischargingTime: 3600,
-        addEventListener: () => {}
-    };
+    const mockBattery = { level: 0.85, charging: false, chargingTime: Infinity, dischargingTime: 3600, addEventListener: () => {} };
     navigator.getBattery = () => Promise.resolve(mockBattery);
 </script>
 `;
@@ -73,6 +60,7 @@ app.get('/proxy', async (req, res) => {
     }
 });
 
+// FIX PALING AMAN: Pakai kutip dua biasa, gak pakai backtick biar gak error syntax
 app.listen(PORT, () => {
-    console.log(\`Stealth Proxy jalan di http://localhost:\${PORT}\`);
+    console.log("Stealth Proxy jalan di http://localhost:" + PORT);
 });
