@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 
 // --- KONFIGURASI ---
-const API_KEY = 'kunci-rahasia-vps-gua'; // GANTI INI NANTI
+const API_KEY = 'dezzgtng'; // GANTI INI NANTI
 const DATA_DIR = path.join(__dirname, 'data');
 
 if (!fs.existsSync(DATA_DIR)) {
